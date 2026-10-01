@@ -1,22 +1,10 @@
----
-title: Inventory & Orders — Laravel Demo
-emoji: 📦
-colorFrom: blue
-colorTo: orange
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
-short_description: A working Laravel 11 app — stock, dealers and an order pipeline.
----
-
 # Inventory & Orders — Laravel demo
 
 A small but genuinely working Laravel application, built to show PHP/Laravel work
 rather than describe it. Nothing on the pages is hard-coded: every figure is a
 query against the database.
 
-Live demo: _(deployed URL goes here)_
+**Live: https://daydreamatelier8.alwaysdata.net**
 
 ## What it does
 
@@ -33,9 +21,13 @@ A pipes-and-fittings distributor's back office:
   that advances the order one stage. The transition is enforced server-side; no
   stage can be skipped.
 
+The data is sample data. The dealers, prices and order references are invented
+for the demo; the behaviour is not. The database is re-seeded nightly, so the
+"advance order" button really writes and the demo is clean again by morning.
+
 ## Stack
 
-Laravel 11 · PHP 8.2+ · SQLite · Blade · plain CSS (no build step)
+Laravel 13 · PHP 8.4 · SQLite · Blade · plain CSS (no build step)
 
 ## Running it locally
 
@@ -48,16 +40,13 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-## Deploying
+## Deployment
 
-The repository carries a `Dockerfile` and a `render.yaml`, so it deploys as a
-Docker web service with no extra configuration. The database is a file inside the
-container and is re-seeded on each boot, which keeps the demo honest — the
-"advance order" button really writes, and a restart puts the sample data back.
+It runs on shared PHP hosting with the document root pointed at `public/`.
+`DEPLOY.md` has the exact steps used for the live instance.
 
-## Notes
-
-The data is sample data. The dealers, prices and order references are invented
-for the demo; the behaviour is not.
+A `Dockerfile` and `docker/start.sh` are also in the repository for running the
+whole thing as a container. That path is not what the live site uses, so treat
+it as a starting point rather than something proven in production.
 
 Built by Zohaib Ahmad — [studioyume.pages.dev](https://studioyume.pages.dev)

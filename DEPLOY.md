@@ -1,56 +1,60 @@
 # Deploying this demo
 
-It runs as a Hugging Face Space using the Docker SDK — free, no card required,
-and the free CPU tier is more generous than Render's.
+The live instance runs on an alwaysdata free account — ordinary shared PHP
+hosting, no card required. Any host with PHP 8.3+, SSH and Composer will do.
 
-## 1. Create the Space
+## What the host needs
 
-https://huggingface.co/new-space
+PHP 8.3 or newer with `pdo_sqlite`, Composer, and Git. No database server:
+the whole thing lives in one SQLite file.
 
-- Owner: your account
-- Space name: `yume-inventory-demo`
-- License: MIT
-- SDK: **Docker** → **Blank**
-- Hardware: **CPU basic · free**
-- Visibility: Public
-
-The URL will be `https://<your-username>-yume-inventory-demo.hf.space`.
-
-## 2. Push this repository to it
-
-The Space is itself a git repository. Add it as a second remote and push:
+## Steps
 
 ```
-git remote add space https://huggingface.co/spaces/<your-username>/yume-inventory-demo
-git push space main
+git clone https://github.com/zohaibahmad-Devops/yume-laravel-demo.git
+cd yume-laravel-demo
+composer install --no-dev --no-interaction --prefer-dist
+cp .env.example .env
+php artisan key:generate --force
+: > database/database.sqlite
+chmod -R 775 storage bootstrap/cache database
+php artisan migrate --force --seed
 ```
 
-Git will ask for credentials. Username is your Hugging Face username; the
-password is a **write access token**, created at
-https://huggingface.co/settings/tokens — not your account password.
+Then set `APP_URL` in `.env` to the real address and build the caches:
 
-GitHub stays the primary remote, so `git push` alone still goes to GitHub.
-Pushing to the Space is `git push space main`.
+```
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
 
-## 3. Watch the build
+## Web server
 
-The Space's **Logs** tab shows the Docker build. It takes roughly 4–6 minutes
-the first time, mostly `composer install`.
+Point the site's document root at `yume-laravel-demo/public` — not at the
+project root, or the `.env` file and the SQLite database become downloadable.
 
-## How the container is configured
+`public/.htaccess` carries the front-controller rewrite. Without it Apache
+serves `/` and 404s every other route, because nothing sends the request to
+`index.php`.
 
-`README.md` carries the Space config in its YAML header — `sdk: docker` and
-`app_port: 7860`, which is the port the Dockerfile and `docker/start.sh` both
-listen on. Changing one without the other will produce a Space that builds and
-then never answers.
+Pin the PHP version rather than leaving it on the host's "default". A host that
+moves its default to the next major release will otherwise break the app with
+no change on your side.
 
-## If the first build fails
+## Nightly reset
 
-Open the **Logs** tab, copy the error, and send it over. A first Docker build
-failing on a missing PHP extension or a path is ordinary; the log names it.
+A scheduled task runs at 03:00 in the project directory:
 
-## Behaviour on the free tier
+```
+php artisan migrate:fresh --force --seed
+```
 
-A free Space pauses after about 48 hours with no visitors and wakes on the next
-request. That is far less intrusive than Render's 15-minute spin-down, which is
-why the demo lives here.
+This is what makes the "advance order" button safe to leave in a public demo —
+visitors really do write to the database, and it is clean again by morning.
+
+## Container alternative
+
+The `Dockerfile` builds the same app with `php artisan serve` behind it. It was
+written for a host that turned out to want a card, so it has never actually been
+built. Treat it as a starting point.

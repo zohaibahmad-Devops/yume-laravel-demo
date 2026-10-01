@@ -30,7 +30,7 @@ class OrderController extends Controller
         return view('orders.show', ['order' => $order]);
     }
 
-    /** Advance one step. The demo re-seeds on every boot, so this is safe to click. */
+    /** Advance one step. The demo re-seeds nightly, so this is safe to click. */
     public function advance(Order $order)
     {
         if ($next = $order->nextStatus()) {
