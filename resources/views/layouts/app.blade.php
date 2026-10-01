@@ -28,6 +28,7 @@ h1{font-size:clamp(26px,3.6vw,36px)} h2{font-size:20px} h3{font-size:16px}
 .ribbon .wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
 .ribbon b{color:#fff;font-weight:600;font-family:var(--display);letter-spacing:.06em}
 .ribbon .dot{opacity:.45}
+.ribbon .spec-sm{display:none}
 .ribbon a{color:#ffc9a8;text-decoration:none;font-weight:600;margin-left:auto}
 .ribbon a:hover{color:#fff}
 @media(max-width:820px){.ribbon a{margin-left:0;width:100%}}
@@ -151,6 +152,36 @@ tbody tr:hover{background:var(--surface)}
 
 footer{border-top:1px solid var(--line);padding:26px 0;color:var(--muted);font-size:14px}
 footer a{color:var(--orange);text-decoration:none;font-weight:600}
+
+/* Phones. The point here is to get to the content quickly: the ribbon and the
+   header together were eating most of a 812px screen before anything useful
+   appeared, and four stacked KPI cards pushed the tables below two scrolls. */
+@media(max-width:620px){
+  .wrap{padding-left:16px;padding-right:16px}
+  .ribbon .spec{display:none}
+  .ribbon .spec-sm{display:inline}
+  .ribbon .wrap{gap:7px;font-size:12px}
+  .ribbon a{margin-left:0;width:100%}
+  header .wrap{gap:12px;padding-top:11px;padding-bottom:11px}
+  .brand{font-size:16.5px;gap:8px}
+  .brand .tile{width:26px;height:26px;font-size:13px}
+  nav{gap:15px;font-size:13.5px;width:100%}
+  main{padding:24px 0 44px}
+  .lede{font-size:15px;margin-bottom:20px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+  .kpi{padding:13px 14px}
+  .kpi .label{font-size:10px;letter-spacing:.1em}
+  .kpi .value{font-size:18px}
+  .kpi .sub{font-size:11.5px;line-height:1.4}
+  .panel>h2{padding:13px 16px;font-size:15px}
+  th{padding:10px 14px}
+  td{padding:10px 14px}
+  .toolbar{padding:12px 16px}
+  .trail{padding:4px 16px 14px}
+  .chart{padding:14px 10px}
+  .pager{padding:12px 16px;font-size:13px}
+  .empty{padding:14px 16px}
+}
 </style>
 </head>
 <body>
@@ -159,7 +190,8 @@ footer a{color:var(--orange);text-decoration:none;font-weight:600}
   <div class="wrap">
     <b>LIVE DEMO</b>
     <span class="dot">&middot;</span>
-    <span>Laravel 13 &middot; PHP 8.4 &middot; SQLite &middot; no JavaScript framework</span>
+    <span class="spec">Laravel 13 &middot; PHP 8.4 &middot; SQLite &middot; no JavaScript framework</span>
+    <span class="spec-sm">Laravel 13 &middot; PHP 8.4 &middot; SQLite</span>
     <a href="https://studioyume.pages.dev" target="_blank" rel="noopener">Built by Zohaib Ahmad &rarr;</a>
   </div>
 </div>
