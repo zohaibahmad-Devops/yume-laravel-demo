@@ -22,7 +22,7 @@ body{margin:0;background:var(--surface);color:var(--navy);font:15px/1.6 var(--sa
 .bar a{color:#ffc9a8;font-weight:600;text-decoration:none}
 .bar button{margin-left:auto;font:600 13px var(--sans);background:var(--orange);color:#fff;border:0;
   border-radius:999px;padding:8px 20px;cursor:pointer}
-@media(max-width:620px){.bar button{margin-left:0}}
+@media(max-width:620px){.bar button{margin-left:0}.bar .sep{display:none}}
 
 .sheet{max-width:820px;margin:26px auto 60px;background:#fff;border:1px solid var(--line);
   border-radius:12px;padding:44px 48px}
@@ -93,7 +93,7 @@ td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
 <div class="bar">
   <div class="in">
     <a href="{{ route('orders.show', $order) }}">&larr; Back to {{ $order->reference }}</a>
-    <span style="opacity:.5">&middot;</span>
+    <span class="sep" style="opacity:.5">&middot;</span>
     <span>Print or save as PDF &mdash; the stylesheet switches to A4</span>
     <button type="button" onclick="window.print()">Print</button>
   </div>

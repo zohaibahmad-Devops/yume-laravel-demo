@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             ['PVC-2-20', 'PVC Pipe 2" x 20ft', 'Pipes', 'length', 1180, 1490, 22, 30],
             ['CPL-6', 'Coupler 6"', 'Fittings', 'pc', 410, 560, 102, 80],
             ['CPL-4', 'Coupler 4"', 'Fittings', 'pc', 240, 330, 335, 80],
-            ['ELB-4-90', 'Elbow 4in 90deg', 'Fittings', 'pc', 265, 370, 246, 60],
+            ['ELB-4-90', 'Elbow 4" 90°', 'Fittings', 'pc', 265, 370, 246, 60],
             ['TEE-4', 'Tee 4"', 'Fittings', 'pc', 290, 405, 54, 60],
             ['GV-4', 'Gate Valve 4"', 'Valves', 'pc', 4100, 5350, 28, 20],
             ['GV-2', 'Gate Valve 2"', 'Valves', 'pc', 1850, 2480, 9, 15],
