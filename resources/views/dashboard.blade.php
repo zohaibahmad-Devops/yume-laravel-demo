@@ -5,7 +5,7 @@
 <h1>Dashboard</h1>
 <p class="lede">
   Stock position, open orders and the dealer ledger for a pipes-and-fittings distributor.
-  Everything below is queried live from the database on each request.
+  Everything below is queried live on each request.
 </p>
 
 <div class="kpis">
@@ -17,7 +17,7 @@
   <div class="kpi">
     <div class="label">Needs reorder</div>
     <div class="value">{{ $lowStock->count() }}</div>
-    <div class="sub">{{ $lowStock->count() === 1 ? 'item at or below' : 'items at or below' }} reorder level</div>
+    <div class="sub">{{ Str::plural('item', $lowStock->count()) }} at or below reorder level</div>
   </div>
   <div class="kpi">
     <div class="label">Open orders</div>
@@ -31,34 +31,70 @@
   </div>
 </div>
 
-<div class="panel">
-  <h2>Order pipeline</h2>
-  <div class="wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Stage</th>
-          <th class="num">Orders</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach ($byStatus as $stage => $count)
+<div class="cols2">
+  <div class="panel">
+    <h2>
+      Order pipeline
+      <a class="side" href="{{ route('orders.index') }}">All orders &rarr;</a>
+    </h2>
+    <div class="wrapper">
+      <table>
+        <thead>
           <tr>
-            <td><span class="pill pill-{{ $stage }}">{{ strtoupper($stage) }}</span></td>
-            <td class="num">{{ $count }}</td>
-            <td><a href="{{ route('orders.index', ['status' => $stage]) }}">View</a></td>
+            <th>Stage</th>
+            <th class="num">Orders</th>
+            <th style="min-width:120px">Share</th>
           </tr>
+        </thead>
+        <tbody>
+          @php $totalOrders = max($byStatus->sum(), 1); @endphp
+          @foreach ($byStatus as $stage => $count)
+            <tr>
+              <td><a href="{{ route('orders.index', ['status' => $stage]) }}" style="text-decoration:none"><span class="pill pill-{{ $stage }}">{{ strtoupper($stage) }}</span></a></td>
+              <td class="num">{{ $count }}</td>
+              <td><span class="meter"><i style="width:{{ round($count / $totalOrders * 100) }}%"></i></span></td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>
+      Latest activity
+      <span class="side" style="color:var(--muted);font-weight:400">audit trail</span>
+    </h2>
+    @if ($activity->isEmpty())
+      <p class="empty">Nothing recorded yet.</p>
+    @else
+      <ul class="trail">
+        @foreach ($activity as $event)
+          <li class="{{ $loop->first ? 'now' : '' }}">
+            <div class="when">{{ $event->created_at->format('d M Y, H:i') }}</div>
+            <div class="what">
+              <a class="ref" href="{{ route('orders.show', $event->order) }}">{{ $event->order->reference }}</a>
+              @if ($event->from_status)
+                &middot; {{ $event->from_status }} &rarr; {{ $event->to_status }}
+              @else
+                &middot; created as {{ $event->to_status }}
+              @endif
+            </div>
+            <div class="who">by {{ $event->actor }}</div>
+          </li>
         @endforeach
-      </tbody>
-    </table>
+      </ul>
+    @endif
   </div>
 </div>
 
 <div class="panel">
-  <h2>Below reorder level</h2>
+  <h2>
+    Below reorder level
+    <a class="side" href="{{ route('stock.index', ['low' => 1]) }}">Reorder list &rarr;</a>
+  </h2>
   @if ($lowStock->isEmpty())
-    <p style="padding:18px 20px;margin:0;color:var(--muted)">Nothing needs reordering right now.</p>
+    <p class="empty">Nothing needs reordering right now.</p>
   @else
   <div class="wrapper">
     <table>
@@ -75,7 +111,7 @@
       <tbody>
         @foreach ($lowStock as $p)
           <tr>
-            <td class="sku">{{ $p->sku }}</td>
+            <td><a class="ref" href="{{ route('stock.show', $p) }}">{{ $p->sku }}</a></td>
             <td>{{ $p->name }}</td>
             <td>{{ $p->category }}</td>
             <td class="num">{{ number_format($p->stock) }} {{ $p->unit }}</td>
@@ -90,7 +126,10 @@
 </div>
 
 <div class="panel">
-  <h2>Recent orders</h2>
+  <h2>
+    Recent orders
+    <a class="side" href="{{ route('reports.index') }}">Reports &rarr;</a>
+  </h2>
   <div class="wrapper">
     <table>
       <thead>
@@ -105,8 +144,8 @@
       <tbody>
         @foreach ($recent as $order)
           <tr>
-            <td><a href="{{ route('orders.show', $order) }}" class="sku" style="color:var(--orange);font-weight:600">{{ $order->reference }}</a></td>
-            <td>{{ $order->dealer->name }}</td>
+            <td><a class="ref" href="{{ route('orders.show', $order) }}">{{ $order->reference }}</a></td>
+            <td><a href="{{ route('dealers.show', $order->dealer) }}" style="text-decoration:none">{{ $order->dealer->name }}</a></td>
             <td>{{ $order->placed_on->format('d M Y') }}</td>
             <td><span class="pill pill-{{ $order->status }}">{{ strtoupper($order->status) }}</span></td>
             <td class="num">PKR {{ number_format($order->total) }}</td>

@@ -6,19 +6,17 @@
 
 <h1>{{ $order->reference }}</h1>
 <p class="lede" style="margin-bottom:18px">
-  {{ $order->dealer->name }}, {{ $order->dealer->city }} &middot;
+  <a href="{{ route('dealers.show', $order->dealer) }}" style="font-weight:600">{{ $order->dealer->name }}</a>,
+  {{ $order->dealer->city }} &middot;
   placed {{ $order->placed_on->format('d M Y') }} &middot;
   {{ $order->dealer->phone }}
 </p>
 
+@php $index = array_search($order->status, App\Models\Order::STATUSES, true); @endphp
 <div class="flow">
   @foreach (App\Models\Order::STATUSES as $i => $stage)
-    @php
-      $current = $stage === $order->status;
-      $index = array_search($order->status, App\Models\Order::STATUSES, true);
-    @endphp
     @if ($i > 0)<i>&rarr;</i>@endif
-    <span class="{{ $current ? 'here' : ($i < $index ? 'done' : '') }}">{{ strtoupper($stage) }}</span>
+    <span class="{{ $stage === $order->status ? 'here' : ($i < $index ? 'done' : '') }}">{{ strtoupper($stage) }}</span>
   @endforeach
 </div>
 
@@ -31,8 +29,16 @@
   @else
     <span class="pill pill-Delivered" style="padding:11px 20px">DELIVERED &mdash; PIPELINE COMPLETE</span>
   @endif
-  <a class="btn btn-ghost" href="{{ route('stock.index') }}">Check stock</a>
+  <a class="btn btn-ghost" href="{{ route('orders.invoice', $order) }}">View invoice</a>
 </div>
+
+@if ($order->nextStatus() === 'Dispatched')
+  <p class="warn">
+    Dispatching this order will take {{ $order->items->sum('quantity') }} units out of stock and write
+    {{ $order->items->count() }} {{ Str::plural('ledger entry', $order->items->count()) }}. If any line
+    cannot be covered, the whole transition is refused.
+  </p>
+@endif
 
 <div class="kpis">
   <div class="kpi">
@@ -56,6 +62,11 @@
       @endif
     </div>
   </div>
+  <div class="kpi">
+    <div class="label">History</div>
+    <div class="value">{{ $order->events->count() }}</div>
+    <div class="sub">recorded {{ Str::plural('event', $order->events->count()) }}</div>
+  </div>
 </div>
 
 <div class="panel">
@@ -69,19 +80,21 @@
           <th class="num">Qty</th>
           <th class="num">Unit price</th>
           <th class="num">Line total</th>
-          <th>Stock after</th>
+          <th>Stock now</th>
         </tr>
       </thead>
       <tbody>
         @foreach ($order->items as $item)
           <tr>
-            <td class="sku">{{ $item->product->sku }}</td>
+            <td><a class="ref" href="{{ route('stock.show', $item->product) }}">{{ $item->product->sku }}</a></td>
             <td>{{ $item->product->name }}</td>
             <td class="num">{{ number_format($item->quantity) }} {{ $item->product->unit }}</td>
             <td class="num">{{ number_format($item->unit_price) }}</td>
             <td class="num">PKR {{ number_format($item->lineTotal()) }}</td>
             <td>
-              @if ($item->product->isLow())
+              @if ($item->product->stock < $item->quantity)
+                <span class="pill flag-low">{{ number_format($item->product->stock) }} &middot; SHORT</span>
+              @elseif ($item->product->isLow())
                 <span class="pill flag-low">{{ number_format($item->product->stock) }} &middot; REORDER</span>
               @else
                 <span class="pill flag-ok">{{ number_format($item->product->stock) }}</span>
@@ -98,6 +111,59 @@
         </tr>
       </tfoot>
     </table>
+  </div>
+</div>
+
+<div class="cols2">
+  <div class="panel">
+    <h2>History</h2>
+    @if ($order->events->isEmpty())
+      <p class="empty">No events recorded.</p>
+    @else
+      <ul class="trail">
+        @foreach ($order->events as $event)
+          <li class="{{ $loop->last ? 'now' : '' }}">
+            <div class="when">{{ $event->created_at->format('d M Y, H:i') }}</div>
+            <div class="what">
+              @if ($event->from_status)
+                {{ $event->from_status }} &rarr; {{ $event->to_status }}
+              @else
+                Order created as {{ $event->to_status }}
+              @endif
+            </div>
+            <div class="who">by {{ $event->actor }}</div>
+          </li>
+        @endforeach
+      </ul>
+    @endif
+  </div>
+
+  <div class="panel">
+    <h2>Stock released by this order</h2>
+    @if ($order->movements->isEmpty())
+      <p class="empty">Nothing yet &mdash; stock moves when the order is dispatched.</p>
+    @else
+    <div class="wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="num">Change</th>
+            <th class="num">Balance after</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach ($order->movements as $m)
+            <tr>
+              <td><a class="ref" href="{{ route('stock.show', $m->product) }}">{{ $m->product->sku }}</a> {{ $m->product->name }}</td>
+              <td class="num minus">{{ number_format($m->delta) }}</td>
+              <td class="num">{{ number_format($m->balance_after) }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+    @endif
   </div>
 </div>
 @endsection

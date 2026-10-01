@@ -2,20 +2,31 @@
 @section('title', 'Stock')
 
 @section('content')
-<h1>Stock</h1>
+<div class="head">
+  <h1>Stock</h1>
+  <a class="btn btn-ghost btn-sm" href="{{ route('stock.export') }}">Download CSV</a>
+</div>
 <p class="lede">
-  Every SKU with its cost, selling price, margin and reorder flag. Filter by category,
-  or show only the lines that need reordering.
+  Every SKU with its cost, selling price, margin and reorder flag. Open any line to see
+  the movements that explain the quantity on hand.
 </p>
 
 <div class="panel">
-  <div class="filters">
-    <a href="{{ route('stock.index') }}" class="{{ $category === 'all' && ! $lowOnly ? 'on' : '' }}">All</a>
+  <div class="toolbar">
+    <a href="{{ route('stock.index') }}" class="chip {{ $category === 'all' && ! $lowOnly && $q === '' ? 'on' : '' }}">All</a>
     @foreach ($categories as $c)
-      <a href="{{ route('stock.index', ['category' => $c]) }}" class="{{ $category === $c ? 'on' : '' }}">{{ $c }}</a>
+      <a href="{{ route('stock.index', ['category' => $c]) }}" class="chip {{ $category === $c ? 'on' : '' }}">{{ $c }}</a>
     @endforeach
-    <a href="{{ route('stock.index', ['low' => 1]) }}" class="{{ $lowOnly ? 'on' : '' }}">Needs reorder</a>
+    <a href="{{ route('stock.index', ['low' => 1]) }}" class="chip {{ $lowOnly ? 'on' : '' }}">Needs reorder</a>
+
+    <form class="search" method="GET" action="{{ route('stock.index') }}">
+      @if ($category !== 'all')<input type="hidden" name="category" value="{{ $category }}">@endif
+      @if ($lowOnly)<input type="hidden" name="low" value="1">@endif
+      <input type="search" name="q" value="{{ $q }}" placeholder="Search name or SKU" aria-label="Search stock">
+      <button class="btn btn-primary btn-sm" type="submit">Search</button>
+    </form>
   </div>
+
   <div class="wrapper">
     <table>
       <thead>
@@ -34,7 +45,7 @@
       <tbody>
         @forelse ($products as $p)
           <tr>
-            <td class="sku">{{ $p->sku }}</td>
+            <td><a class="ref" href="{{ route('stock.show', $p) }}">{{ $p->sku }}</a></td>
             <td>{{ $p->name }}</td>
             <td>{{ $p->category }}</td>
             <td class="num">{{ number_format($p->cost) }}</td>
@@ -51,15 +62,17 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="9" style="color:var(--muted)">No products match this filter.</td></tr>
+          <tr><td colspan="9" style="color:var(--muted)">Nothing matches that filter.</td></tr>
         @endforelse
       </tbody>
     </table>
   </div>
+
+  @include('partials.pagination', ['paginator' => $products])
 </div>
 
 <p style="color:var(--muted);font-size:14px">
-  Showing {{ $products->count() }} {{ Str::plural('product', $products->count()) }} &middot;
-  total value at cost PKR {{ number_format($products->sum(fn ($p) => (float) $p->cost * $p->stock)) }}
+  {{ number_format($matchCount) }} {{ Str::plural('product', $matchCount) }} matched
+  &middot; total value at cost PKR {{ number_format($totalValue) }}
 </p>
 @endsection

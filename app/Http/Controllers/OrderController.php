@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\AdvanceOrder;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
@@ -9,35 +10,51 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $status = $request->query('status');
-        $query = Order::with('dealer')->withCount('items')->latest('placed_on');
+        $query = Order::with('dealer')->withCount('items')->latest('placed_on')->latest('id');
 
-        if ($status && $status !== 'all') {
+        if (($status = $request->query('status')) && $status !== 'all') {
             $query->where('status', $status);
         }
 
+        if ($q = trim((string) $request->query('q'))) {
+            $query->where(fn ($w) => $w->where('reference', 'like', "%{$q}%")
+                ->orWhereHas('dealer', fn ($d) => $d->where('name', 'like', "%{$q}%")));
+        }
+
         return view('orders.index', [
-            'orders' => $query->get(),
+            'orders' => $query->paginate(8)->withQueryString(),
             'status' => $status ?: 'all',
             'statuses' => Order::STATUSES,
+            'q' => trim((string) $request->query('q')),
         ]);
     }
 
     public function show(Order $order)
     {
-        $order->load('dealer', 'items.product');
+        $order->load([
+            'dealer',
+            'items.product',
+            'events' => fn ($q) => $q->oldest('created_at')->oldest('id'),
+            'movements.product',
+        ]);
 
         return view('orders.show', ['order' => $order]);
     }
 
-    /** Advance one step. The demo re-seeds nightly, so this is safe to click. */
-    public function advance(Order $order)
+    public function advance(Order $order, AdvanceOrder $advance)
     {
-        if ($next = $order->nextStatus()) {
-            $order->update(['status' => $next]);
-        }
+        $order->load('items.product');
+        $outcome = $advance($order);
 
-        return redirect()->route('orders.show', $order)
-            ->with('note', "Order {$order->reference} moved to {$order->status}.");
+        return redirect()
+            ->route('orders.show', $order)
+            ->with($outcome->ok ? 'note' : 'warn', $outcome->message);
+    }
+
+    public function invoice(Order $order)
+    {
+        $order->load('dealer', 'items.product');
+
+        return view('orders.invoice', ['order' => $order]);
     }
 }

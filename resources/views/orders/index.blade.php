@@ -2,19 +2,29 @@
 @section('title', 'Orders')
 
 @section('content')
-<h1>Orders</h1>
+<div class="head">
+  <h1>Orders</h1>
+  <a class="btn btn-ghost btn-sm" href="{{ route('orders.export') }}">Download CSV</a>
+</div>
 <p class="lede">
-  Dealer orders through the five-stage pipeline. Open any order to see its lines and
-  move it to the next stage.
+  Dealer orders through the five-stage pipeline. Open any order to see its lines, its
+  full history, and to move it to the next stage.
 </p>
 
 <div class="panel">
-  <div class="filters">
-    <a href="{{ route('orders.index') }}" class="{{ $status === 'all' ? 'on' : '' }}">All</a>
+  <div class="toolbar">
+    <a href="{{ route('orders.index') }}" class="chip {{ $status === 'all' && $q === '' ? 'on' : '' }}">All</a>
     @foreach ($statuses as $s)
-      <a href="{{ route('orders.index', ['status' => $s]) }}" class="{{ $status === $s ? 'on' : '' }}">{{ $s }}</a>
+      <a href="{{ route('orders.index', ['status' => $s]) }}" class="chip {{ $status === $s ? 'on' : '' }}">{{ $s }}</a>
     @endforeach
+
+    <form class="search" method="GET" action="{{ route('orders.index') }}">
+      @if ($status !== 'all')<input type="hidden" name="status" value="{{ $status }}">@endif
+      <input type="search" name="q" value="{{ $q }}" placeholder="Search reference or dealer" aria-label="Search orders">
+      <button class="btn btn-primary btn-sm" type="submit">Search</button>
+    </form>
   </div>
+
   <div class="wrapper">
     <table>
       <thead>
@@ -31,8 +41,8 @@
       <tbody>
         @forelse ($orders as $order)
           <tr>
-            <td><a href="{{ route('orders.show', $order) }}" class="sku" style="color:var(--orange);font-weight:600">{{ $order->reference }}</a></td>
-            <td>{{ $order->dealer->name }}</td>
+            <td><a class="ref" href="{{ route('orders.show', $order) }}">{{ $order->reference }}</a></td>
+            <td><a href="{{ route('dealers.show', $order->dealer) }}" style="text-decoration:none">{{ $order->dealer->name }}</a></td>
             <td>{{ $order->dealer->city }}</td>
             <td>{{ $order->placed_on->format('d M Y') }}</td>
             <td class="num">{{ $order->items_count }}</td>
@@ -40,15 +50,16 @@
             <td class="num">PKR {{ number_format($order->total) }}</td>
           </tr>
         @empty
-          <tr><td colspan="7" style="color:var(--muted)">No orders at this stage.</td></tr>
+          <tr><td colspan="7" style="color:var(--muted)">No orders match.</td></tr>
         @endforelse
       </tbody>
     </table>
   </div>
+
+  @include('partials.pagination', ['paginator' => $orders])
 </div>
 
 <p style="color:var(--muted);font-size:14px">
-  {{ $orders->count() }} {{ Str::plural('order', $orders->count()) }} &middot;
-  PKR {{ number_format($orders->sum('total')) }}
+  {{ number_format($orders->total()) }} {{ Str::plural('order', $orders->total()) }} matched
 </p>
 @endsection

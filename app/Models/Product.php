@@ -19,6 +19,11 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function movements(): HasMany
+    {
+        return ->hasMany(StockMovement::class);
+    }
+
     /** A line is low when it has fallen to or below the level the buyer set. */
     public function isLow(): bool
     {

@@ -28,6 +28,16 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function events(): HasMany
+    {
+        return ->hasMany(OrderEvent::class);
+    }
+
+    public function movements(): HasMany
+    {
+        return ->hasMany(StockMovement::class);
+    }
+
     public function nextStatus(): ?string
     {
         $i = array_search($this->status, self::STATUSES, true);
