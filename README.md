@@ -1,3 +1,15 @@
+---
+title: Inventory & Orders — Laravel Demo
+emoji: 📦
+colorFrom: blue
+colorTo: orange
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: A working Laravel 11 app — stock, dealers and an order pipeline.
+---
+
 # Inventory & Orders — Laravel demo
 
 A small but genuinely working Laravel application, built to show PHP/Laravel work
