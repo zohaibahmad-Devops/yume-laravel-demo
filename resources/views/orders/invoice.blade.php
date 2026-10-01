@@ -47,12 +47,23 @@ body{margin:0;background:var(--surface);color:var(--navy);font:15px/1.6 var(--sa
 .party .name{font-weight:700;font-size:16px}
 .party .rest{font-size:13.5px;color:var(--muted);line-height:1.6}
 
+.lines{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{font-family:var(--display);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--line)}
 td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
 .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sku{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);display:block}
+
+/* On a phone the four columns do not fit at full size. Tightening them is
+   better than letting the whole sheet scroll sideways; the wrapper above is
+   the backstop for anything still too wide. */
+@media(max-width:620px){
+  table{font-size:12.5px}
+  th{padding:8px 5px;font-size:9.5px;letter-spacing:.06em}
+  td{padding:9px 5px}
+  .sku{font-size:11px}
+}
 
 .totals{margin-top:22px;margin-left:auto;width:min(340px,100%)}
 .totals div{display:flex;justify-content:space-between;gap:20px;padding:8px 12px;font-size:14.5px}
@@ -131,29 +142,31 @@ td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
     </div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Description</th>
-        <th class="num">Qty</th>
-        <th class="num">Unit price</th>
-        <th class="num">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      @foreach ($order->items as $item)
+  <div class="lines">
+    <table>
+      <thead>
         <tr>
-          <td>
-            {{ $item->product->name }}
-            <span class="sku">{{ $item->product->sku }} &middot; {{ $item->product->category }}</span>
-          </td>
-          <td class="num">{{ number_format($item->quantity) }} {{ $item->product->unit }}</td>
-          <td class="num">{{ number_format($item->unit_price, 2) }}</td>
-          <td class="num">{{ number_format($item->lineTotal(), 2) }}</td>
+          <th>Description</th>
+          <th class="num">Qty</th>
+          <th class="num">Unit price</th>
+          <th class="num">Amount</th>
         </tr>
-      @endforeach
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @foreach ($order->items as $item)
+          <tr>
+            <td>
+              {{ $item->product->name }}
+              <span class="sku">{{ $item->product->sku }} &middot; {{ $item->product->category }}</span>
+            </td>
+            <td class="num">{{ number_format($item->quantity) }} {{ $item->product->unit }}</td>
+            <td class="num">{{ number_format($item->unit_price, 2) }}</td>
+            <td class="num">{{ number_format($item->lineTotal(), 2) }}</td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
 
   @php
     $subtotal = (float) $order->total;
