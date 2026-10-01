@@ -106,7 +106,7 @@ footer a{color:var(--orange);text-decoration:none;font-weight:600}
   <div class="wrap">
     <b>Demonstration</b>
     <span>&middot;</span>
-    <span>Laravel 11 &middot; SQLite &middot; sample data, not a real business</span>
+    <span>Laravel 13 &middot; PHP 8.4 &middot; SQLite &middot; sample data, not a real business</span>
     <a href="https://studioyume.pages.dev" target="_blank" rel="noopener">Built by Zohaib Ahmad &rarr;</a>
   </div>
 </div>
