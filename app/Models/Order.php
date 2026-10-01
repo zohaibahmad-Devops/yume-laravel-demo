@@ -30,12 +30,12 @@ class Order extends Model
 
     public function events(): HasMany
     {
-        return ->hasMany(OrderEvent::class);
+        return $this->hasMany(OrderEvent::class);
     }
 
     public function movements(): HasMany
     {
-        return ->hasMany(StockMovement::class);
+        return $this->hasMany(StockMovement::class);
     }
 
     public function nextStatus(): ?string
