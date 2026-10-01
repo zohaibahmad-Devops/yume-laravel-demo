@@ -4,9 +4,9 @@
     "description": "Inventory and orders demo — Laravel 11, SQLite. Built by Zohaib Ahmad (Yume).",
     "license": "MIT",
     "require": {
-        "php": "^8.2",
-        "laravel/framework": "^11.0",
-        "laravel/tinker": "^2.9"
+        "php": "^8.3",
+        "laravel/framework": "^13.0",
+        "laravel/tinker": "^2.10"
     },
     "autoload": {
         "psr-4": {
