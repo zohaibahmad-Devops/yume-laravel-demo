@@ -26,11 +26,36 @@
       @csrf
       <button class="btn btn-primary" type="submit">Move to {{ $order->nextStatus() }}</button>
     </form>
-  @else
+  @elseif ($order->status !== 'Cancelled')
     <span class="pill pill-Delivered" style="padding:11px 20px">DELIVERED &mdash; PIPELINE COMPLETE</span>
+  @else
+    <span class="pill flag-low" style="padding:11px 20px">CANCELLED</span>
   @endif
   <a class="btn btn-ghost" href="{{ route('orders.invoice', $order) }}">View invoice</a>
 </div>
+
+@if (! in_array($order->status, ['Dispatched', 'Delivered', 'Cancelled'], true))
+  <div class="panel">
+    <h2>Cancel this order</h2>
+    <p style="color:var(--muted);font-size:14px;margin-top:0">
+      An order can be cancelled right up to the moment it costs something. Once it is
+      Dispatched the goods are on a truck, so cancelling is no longer a change of mind
+      &mdash; it is a return, which is a different process with a different paper trail.
+      Cancelling frees the dealer's credit immediately.
+    </p>
+    <form method="POST" action="{{ route('orders.cancel', $order) }}">
+      @csrf
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+        <label style="flex:1;min-width:240px">
+          <span style="display:block;font-size:13px;color:var(--muted);margin-bottom:4px">Reason</span>
+          <input type="text" name="reason" required style="width:100%"
+                 placeholder="Dealer cancelled by phone" aria-label="Reason for cancelling">
+        </label>
+        <button class="btn btn-ghost" type="submit">Cancel the order</button>
+      </div>
+    </form>
+  </div>
+@endif
 
 @if ($order->nextStatus() === 'Dispatched')
   <p class="warn">

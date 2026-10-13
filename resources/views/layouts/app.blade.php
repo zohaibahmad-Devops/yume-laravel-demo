@@ -205,8 +205,11 @@ footer a{color:var(--orange);text-decoration:none;font-weight:600}
       <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'on' : '' }}">Dashboard</a>
       <a href="{{ route('stock.index') }}" class="{{ request()->routeIs('stock.*') ? 'on' : '' }}">Stock</a>
       <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'on' : '' }}">Orders</a>
+      <a href="{{ route('purchasing.index') }}" class="{{ request()->routeIs('purchasing.*') ? 'on' : '' }}">Purchasing</a>
       <a href="{{ route('dealers.index') }}" class="{{ request()->routeIs('dealers.*') ? 'on' : '' }}">Dealers</a>
+      <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'on' : '' }}">Suppliers</a>
       <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'on' : '' }}">Reports</a>
+      <a href="{{ route('activity.index') }}" class="{{ request()->routeIs('activity.*') ? 'on' : '' }}">Activity</a>
     </nav>
   </div>
 </header>

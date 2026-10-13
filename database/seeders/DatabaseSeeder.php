@@ -7,7 +7,11 @@ use App\Models\Order;
 use App\Models\OrderEvent;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderEvent;
+use App\Models\PurchaseOrderItem;
 use App\Models\StockMovement;
+use App\Models\Supplier;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -120,6 +124,134 @@ class DatabaseSeeder extends Seeder
             $order->update(['total' => $total]);
 
             $this->replay($order, $finalStatus, $placed, $lines);
+        }
+
+        $this->seedPurchasing();
+    }
+
+    /**
+     * The buying side. Without it the warehouse only ever empties, and the
+     * stock ledger has nothing on it but an opening balance and dispatches.
+     *
+     * One order is fully received, one is part received, and two are still in
+     * transit — one of those deliberately past its expected date, so the late
+     * column on the purchasing screen has something real to show.
+     */
+    private function seedPurchasing(): void
+    {
+        $suppliers = [
+            ['Indus Polymers', 'Lahore', '+92 42 35771200', 10],
+            ['Chenab Valve Works', 'Gujranwala', '+92 55 3842100', 14],
+            ['Pak Cables Ltd', 'Karachi', '+92 21 32501800', 21],
+            ['Taxila Plastics', 'Taxila', '+92 51 4532900', 5],
+        ];
+
+        foreach ($suppliers as [$name, $city, $phone, $lead]) {
+            Supplier::create([
+                'name' => $name,
+                'city' => $city,
+                'phone' => $phone,
+                'lead_time_days' => $lead,
+            ]);
+        }
+
+        /* [reference, supplier, ordered days ago, expected in N days from order,
+            status, [[product id, qty ordered, qty received], ...]] */
+        $purchases = [
+            ['PO-0101', 1, 24, 10, PurchaseOrder::RECEIVED,      [[1, 40, 40], [2, 60, 60]]],
+            ['PO-0102', 3, 16, 21, PurchaseOrder::PART_RECEIVED, [[10, 800, 500], [11, 200, 0]]],
+            ['PO-0103', 2, 9,  14, PurchaseOrder::ORDERED,       [[8, 20, 0], [9, 25, 0]]],
+            ['PO-0104', 4, 3,  5,  PurchaseOrder::ORDERED,       [[5, 300, 0], [6, 150, 0]]],
+        ];
+
+        foreach ($purchases as [$ref, $supplierId, $daysAgo, $leadDays, $status, $lines]) {
+            $ordered = now()->subDays($daysAgo)->startOfDay();
+
+            $po = PurchaseOrder::create([
+                'reference' => $ref,
+                'supplier_id' => $supplierId,
+                'status' => PurchaseOrder::ORDERED,
+                'total' => 0,
+                'ordered_on' => $ordered,
+                'expected_on' => $ordered->copy()->addDays($leadDays),
+                'created_at' => $ordered,
+                'updated_at' => $ordered,
+            ]);
+
+            $total = 0;
+
+            foreach ($lines as [$productId, $qty, $received]) {
+                $product = Product::find($productId);
+
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'product_id' => $productId,
+                    'quantity' => $qty,
+                    'quantity_received' => 0,
+                    'unit_cost' => $product->cost,
+                ]);
+
+                $total += (float) $product->cost * $qty;
+            }
+
+            $po->update(['total' => $total]);
+
+            PurchaseOrderEvent::create([
+                'purchase_order_id' => $po->id,
+                'from_status' => null,
+                'to_status' => PurchaseOrder::ORDERED,
+                'detail' => count($lines).' lines, PKR '.number_format($total),
+                'actor' => 'buyer',
+                'created_at' => $ordered,
+                'updated_at' => $ordered,
+            ]);
+
+            if ($status === PurchaseOrder::ORDERED) {
+                continue;
+            }
+
+            /* Receive what the fixture says was received, through the same
+               shape the live screen uses: a movement per line, then the header
+               status read back from the lines. */
+            $receivedAt = $ordered->copy()->addDays($leadDays);
+            $units = 0;
+
+            foreach ($po->items as $i => $item) {
+                $take = $lines[$i][2];
+
+                if ($take <= 0) {
+                    continue;
+                }
+
+                $product = $item->product;
+                $product->increment('stock', $take);
+                $units += $take;
+
+                StockMovement::create([
+                    'product_id' => $product->id,
+                    'purchase_order_id' => $po->id,
+                    'delta' => $take,
+                    'balance_after' => $product->fresh()->stock,
+                    'reason' => "Received on {$po->reference}",
+                    'created_at' => $receivedAt,
+                    'updated_at' => $receivedAt,
+                ]);
+
+                $item->update(['quantity_received' => $take]);
+            }
+
+            $po->load('items');
+            $po->update(['status' => $po->statusFromLines()]);
+
+            PurchaseOrderEvent::create([
+                'purchase_order_id' => $po->id,
+                'from_status' => PurchaseOrder::ORDERED,
+                'to_status' => $po->status,
+                'detail' => $units.' units received',
+                'actor' => 'warehouse',
+                'created_at' => $receivedAt,
+                'updated_at' => $receivedAt,
+            ]);
         }
     }
 

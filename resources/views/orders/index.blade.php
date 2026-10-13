@@ -4,7 +4,10 @@
 @section('content')
 <div class="head">
   <h1>Orders</h1>
-  <a class="btn btn-ghost btn-sm" href="{{ route('orders.export') }}">Download CSV</a>
+  <span style="display:flex;gap:10px;flex-wrap:wrap">
+    <a class="btn btn-primary btn-sm" href="{{ route('orders.create') }}">New order</a>
+    <a class="btn btn-ghost btn-sm" href="{{ route('orders.export') }}">Download CSV</a>
+  </span>
 </div>
 <p class="lede">
   Dealer orders through the five-stage pipeline. Open any order to see its lines, its

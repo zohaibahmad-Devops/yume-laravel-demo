@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\AdjustStock;
 use App\Models\Product;
+use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 
 class StockController extends Controller
@@ -28,9 +30,36 @@ class StockController extends Controller
 
     public function show(Product $product)
     {
-        $product->load(['movements' => fn ($q) => $q->with('order')->latest('created_at')->latest('id')]);
+        $product->load([
+            'movements' => fn ($q) => $q->with('order', 'purchaseOrder')->latest('created_at')->latest('id'),
+        ]);
 
-        return view('stock.show', ['product' => $product]);
+        /* "On order" is the number that stops a buyer ordering the same thing
+           twice while the first delivery is still on the road. */
+        $onOrder = (int) $product->purchaseOrderItems()
+            ->whereHas('purchaseOrder', fn ($q) => $q->whereIn('status', [PurchaseOrder::ORDERED, PurchaseOrder::PART_RECEIVED]))
+            ->get()
+            ->sum(fn ($i) => $i->outstanding());
+
+        return view('stock.show', [
+            'product' => $product,
+            'onOrder' => $onOrder,
+            'reasons' => AdjustStock::REASONS,
+        ]);
+    }
+
+    public function adjust(Request $request, Product $product, AdjustStock $adjust)
+    {
+        $outcome = $adjust(
+            $product,
+            (int) $request->input('counted', 0),
+            (string) $request->input('reason', ''),
+            $request->input('note')
+        );
+
+        return redirect()
+            ->route('stock.show', $product)
+            ->with($outcome->ok ? 'note' : 'warn', $outcome->message);
     }
 
     private function filtered(Request $request)
