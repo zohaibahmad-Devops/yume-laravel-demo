@@ -1,7 +1,7 @@
 {
     "name": "yume/inventory-demo",
     "type": "project",
-    "description": "Inventory and orders demo — Laravel 11, SQLite. Built by Zohaib Ahmad (Yume).",
+    "description": "Inventory and orders demo — Laravel 11, SQLite. Built by AIB Digital.",
     "license": "MIT",
     "require": {
         "php": "^8.3",
