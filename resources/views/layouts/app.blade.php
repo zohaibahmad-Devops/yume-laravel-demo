@@ -192,7 +192,7 @@ footer a{color:var(--orange);text-decoration:none;font-weight:600}
     <span class="dot">&middot;</span>
     <span class="spec">Laravel 13 &middot; PHP 8.4 &middot; SQLite &middot; no JavaScript framework</span>
     <span class="spec-sm">Laravel 13 &middot; PHP 8.4 &middot; SQLite</span>
-    <a href="https://studioyume.pages.dev" target="_blank" rel="noopener">Built by Zohaib Ahmad &rarr;</a>
+    <a href="https://aibdigital.com" target="_blank" rel="noopener">Built by AIB Digital &rarr;</a>
   </div>
 </div>
 
@@ -230,7 +230,7 @@ footer a{color:var(--orange);text-decoration:none;font-weight:600}
   <div class="wrap">
     A working application, not a mockup &mdash; every figure on these pages is read from the database,
     and the pipeline writes back to it. The dealers and prices are invented; the behaviour is not.
-    <a href="https://studioyume.pages.dev">studioyume.pages.dev</a>
+    <a href="https://aibdigital.com">aibdigital.com</a>
   </div>
 </footer>
 

@@ -49,4 +49,4 @@ A `Dockerfile` and `docker/start.sh` are also in the repository for running the
 whole thing as a container. That path is not what the live site uses, so treat
 it as a starting point rather than something proven in production.
 
-Built by Zohaib Ahmad — [studioyume.pages.dev](https://studioyume.pages.dev)
+Built by Zohaib Ahmad — [aibdigital.com](https://aibdigital.com)
